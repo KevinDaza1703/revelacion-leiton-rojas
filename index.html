@@ -305,8 +305,8 @@
     .music-btn svg { width: 22px; height: 22px; }
     .music-btn .waves { transform-origin: 9px 12px; }
     .music-btn.playing .waves { animation: beat 1.2s ease-in-out infinite; }
-    .music-btn:not(.playing) .waves { display: none; }
-    .music-btn.playing .mute { display: none; }
+    .music-btn:not(.on) .waves { display: none; }
+    .music-btn.on .mute { display: none; }
     @keyframes beat { 50% { opacity: .45; } }
 
     .toast {
@@ -409,7 +409,7 @@
 
   </main>
 
-  <button class="music-btn" id="musicBtn" aria-label="Música" aria-pressed="false" hidden>
+  <button class="music-btn on" id="musicBtn" aria-label="Silenciar música" aria-pressed="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none"/>
       <g class="waves"><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></g>
@@ -477,7 +477,8 @@
     ["bienvenida", "votacion", "resultado"].forEach((n) => { new Image().src = `assets/${n}.jpg`; });
 
     // ---------- Música de fondo ----------
-    // Coloca el archivo en assets/musica.mp3. Si no existe, el botón no aparece.
+    // Encendida por defecto. Los navegadores no permiten sonido antes del primer toque,
+    // así que se intenta al cargar y, si se bloquea, arranca con el primer toque en cualquier parte.
     const MUSIC_URL = "assets/musica.mp3";
     const MUSIC_VOLUME = 0.75;
     // La pista tiene silencio al inicio y al final: se reproduce en bucle del segundo 2 al 177
@@ -485,52 +486,82 @@
     const MUSIC_END = 177;
     const music = new Audio();
     music.preload = "auto";
-    let musicReady = false;
-    let musicWanted = false; // el invitado no la ha silenciado
+    let musicWanted = true; // encendida hasta que el invitado la apague
+    let fadeTimer = null;
 
-    music.addEventListener("canplay", () => { musicReady = true; $("musicBtn").hidden = false; }, { once: true });
-    music.addEventListener("error", () => { musicReady = false; $("musicBtn").hidden = true; });
+    music.addEventListener("error", () => { $("musicBtn").hidden = true; });
     music.addEventListener("timeupdate", () => { if (music.currentTime >= MUSIC_END) music.currentTime = MUSIC_START; });
     music.addEventListener("ended", () => { music.currentTime = MUSIC_START; music.play().catch(() => {}); });
+    // Salta el silencio inicial una sola vez (si el salto falla, simplemente suena desde 0)
+    let introSkipped = false;
+    const skipIntro = () => {
+      if (introSkipped) return;
+      introSkipped = true;
+      try { if (music.currentTime < MUSIC_START) music.currentTime = MUSIC_START; } catch (e) {}
+    };
+    music.addEventListener("loadedmetadata", skipIntro, { once: true });
+    music.addEventListener("playing", () => setMusicUI());
+    music.addEventListener("pause", () => setMusicUI());
     music.src = MUSIC_URL;
 
-    function setMusicUI(playing) {
-      $("musicBtn").classList.toggle("playing", playing);
-      $("musicBtn").setAttribute("aria-pressed", playing ? "true" : "false");
-      $("musicBtn").setAttribute("aria-label", playing ? "Pausar música" : "Reproducir música");
+    function setMusicUI() {
+      const btn = $("musicBtn");
+      btn.classList.toggle("on", musicWanted);
+      btn.classList.toggle("playing", musicWanted && !music.paused);
+      btn.setAttribute("aria-pressed", musicWanted ? "true" : "false");
+      btn.setAttribute("aria-label", musicWanted ? "Silenciar música" : "Activar música");
     }
 
     function playMusic() {
-      musicWanted = true;
+      if (!musicWanted || !music.paused) return Promise.resolve();
+      if (music.readyState >= 1) skipIntro();
       music.volume = 0;
-      try { if (music.currentTime < MUSIC_START) music.currentTime = MUSIC_START; } catch (e) {}
       return music.play().then(() => {
-        setMusicUI(true);
         // entrada suave (iPhone ignora el volumen y suena directo)
-        const step = setInterval(() => {
+        clearInterval(fadeTimer);
+        fadeTimer = setInterval(() => {
           music.volume = Math.min(MUSIC_VOLUME, music.volume + 0.05);
-          if (music.volume >= MUSIC_VOLUME) clearInterval(step);
+          if (music.volume >= MUSIC_VOLUME) clearInterval(fadeTimer);
         }, 150);
-      }).catch(() => setMusicUI(false));
+      }).catch(() => {}); // bloqueado hasta el primer toque: el botón sigue encendido
     }
 
+    // Primer toque en cualquier parte de la página (excepto el propio botón) desbloquea el audio
+    const unlockEvents = ["pointerup", "touchend", "click", "keydown"];
+    function unlockAudio(e) {
+      if (e.target.closest && e.target.closest("#musicBtn")) return;
+      if (!musicWanted) return;
+      playMusic().then(() => {
+        if (!music.paused) unlockEvents.forEach((t) => document.removeEventListener(t, unlockAudio, true));
+      });
+    }
+    unlockEvents.forEach((t) => document.addEventListener(t, unlockAudio, true));
+
     $("musicBtn").addEventListener("click", () => {
-      if (music.paused) playMusic();
-      else { musicWanted = false; music.pause(); setMusicUI(false); }
+      if (musicWanted && !music.paused) {
+        musicWanted = false;
+        music.pause();
+      } else {
+        musicWanted = true;
+        playMusic();
+      }
+      setMusicUI();
     });
 
     // Pausa si el invitado cambia de app o pestaña, y retoma al volver
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) music.pause();
-      else if (musicWanted && musicReady) music.play().catch(() => {});
+      else if (musicWanted) music.play().catch(() => {});
     });
+
+    setMusicUI();
+    playMusic(); // algunos navegadores lo permiten de una vez
 
     // ---------- Vista 1 → 2 ----------
     $("seal").addEventListener("click", () => {
       const env = $("viewEnvelope");
       if (env.classList.contains("opening")) return;
       env.classList.add("opening");
-      playMusic(); // el toque en el sello cuenta como gesto: los navegadores permiten iniciar audio aquí
       setTimeout(() => show("viewWelcome"), 2050);
     });
 
