@@ -479,15 +479,19 @@
     // ---------- Música de fondo ----------
     // Coloca el archivo en assets/musica.mp3. Si no existe, el botón no aparece.
     const MUSIC_URL = "assets/musica.mp3";
-    const MUSIC_VOLUME = 0.5;
+    const MUSIC_VOLUME = 0.75;
+    // La pista tiene silencio al inicio y al final: se reproduce en bucle del segundo 2 al 177
+    const MUSIC_START = 2;
+    const MUSIC_END = 177;
     const music = new Audio();
-    music.loop = true;
     music.preload = "auto";
     let musicReady = false;
     let musicWanted = false; // el invitado no la ha silenciado
 
     music.addEventListener("canplay", () => { musicReady = true; $("musicBtn").hidden = false; }, { once: true });
     music.addEventListener("error", () => { musicReady = false; $("musicBtn").hidden = true; });
+    music.addEventListener("timeupdate", () => { if (music.currentTime >= MUSIC_END) music.currentTime = MUSIC_START; });
+    music.addEventListener("ended", () => { music.currentTime = MUSIC_START; music.play().catch(() => {}); });
     music.src = MUSIC_URL;
 
     function setMusicUI(playing) {
@@ -499,6 +503,7 @@
     function playMusic() {
       musicWanted = true;
       music.volume = 0;
+      try { if (music.currentTime < MUSIC_START) music.currentTime = MUSIC_START; } catch (e) {}
       return music.play().then(() => {
         setMusicUI(true);
         // entrada suave (iPhone ignora el volumen y suena directo)
