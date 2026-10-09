@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nueva Aventura Saiyajin | Familia Leiton Rojas</title>
+  <meta name="description" content="La Familia Leiton Rojas te invita a su revelación de género. ¿Guerrero o guerrera? ¡Vota por tu equipo!">
+  <meta name="theme-color" content="#0b0f14">
+
+  <!-- Vista previa al compartir por WhatsApp / redes -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Nueva Aventura Saiyajin · ¿Guerrero o guerrera?">
+  <meta property="og:description" content="La Familia Leiton Rojas te invita a su revelación de género. ¡Abre tu invitación y vota!">
+  <meta property="og:image" content="https://kevindaza1703.github.io/revelacion-leiton-rojas/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://kevindaza1703.github.io/revelacion-leiton-rojas/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/esfera.png">
+  <link rel="apple-touch-icon" href="assets/esfera.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="assets/sobre.webp">
+
+  <style>
+    :root {
+      --crimson: #9d2449;
+      --crimson-dark: #7a1a37;
+      --ink: #5e4b37;
+      --boy-dark: #1d5687;
+      --girl-dark: #b9294f;
+      --gold: #f8bc34;
+      /* Ancho de tarjeta: cabe en ancho y alto de cualquier pantalla */
+      --cw: min(420px, calc(100vw - 24px), calc((100vh - 96px) / 1.4144));
+      --ew: min(540px, calc(100vw - 20px), calc((100vh - 150px) * 1.37));
+    }
+    @supports (height: 100svh) {
+      :root {
+        --cw: min(420px, calc(100vw - 24px), calc((100svh - 96px) / 1.4144));
+        --ew: min(540px, calc(100vw - 20px), calc((100svh - 150px) * 1.37));
+      }
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      font-family: 'Shippori Mincho', Georgia, serif;
+      color: var(--ink);
+      background: #0b0f14 url('assets/fondo.jpg') center / cover fixed;
+      overflow-x: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(10, 15, 22, .35) 0%, rgba(10, 15, 22, .85) 100%);
+      pointer-events: none;
+    }
+    button { font: inherit; color: inherit; }
+
+    /* ---------- Partículas de ki ---------- */
+    #ki { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+    #ki span {
+      position: absolute; bottom: -10px;
+      width: var(--s); height: var(--s);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 226, 140, .95) 0%, rgba(248, 188, 52, .35) 55%, transparent 70%);
+      animation: rise var(--d) linear var(--delay) infinite;
+      opacity: 0;
+    }
+    @keyframes rise {
+      0% { transform: translate(0, 0); opacity: 0; }
+      10% { opacity: .9; }
+      100% { transform: translate(var(--x), -105vh); opacity: 0; }
+    }
+
+    /* ---------- Escenario y vistas ---------- */
+    .stage {
+      position: relative; z-index: 1;
+      min-height: 100vh; min-height: 100svh;
+      display: grid; place-items: center;
+      padding: 12px;
+    }
+    .view {
+      grid-area: 1 / 1;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      opacity: 0; transform: scale(.94);
+      transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s .5s;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    .view.active {
+      opacity: 1; transform: none; pointer-events: auto; visibility: visible;
+      transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s;
+    }
+
+    .card {
+      position: relative;
+      width: var(--cw);
+      aspect-ratio: 1131 / 1600;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fbf3ea;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, .8), 0 0 0 1px rgba(200, 180, 151, .5);
+      container-type: inline-size;
+    }
+    .card > img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+    .hotspot {
+      position: absolute; border: 0; padding: 0; background: transparent; cursor: pointer;
+      border-radius: 4px;
+      transition: transform .15s ease;
+    }
+    .hotspot:active { transform: scale(.97); }
+    .hotspot:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(157, 36, 73, 0), 0 0 0 0 rgba(248, 188, 52, 0); }
+      50% { box-shadow: 0 0 0 4px rgba(157, 36, 73, .16), 0 0 22px 6px rgba(248, 188, 52, .45); }
+    }
+
+    /* ---------- Vista 1: sobre ---------- */
+    .env-title {
+      margin: 0; text-align: center;
+      font-family: 'Cinzel', serif; font-weight: 700;
+      color: #f6efe2; letter-spacing: .08em;
+      font-size: clamp(16px, 4.6vw, 22px);
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .7);
+    }
+    .env-title small { display: block; font-weight: 500; font-size: .66em; letter-spacing: .25em; opacity: .8; margin-bottom: 4px; }
+    .envelope { position: relative; width: var(--ew); aspect-ratio: 1200 / 876; }
+    .envelope .letter {
+      position: absolute; left: 22%; width: 56%; top: 6%;
+      aspect-ratio: 1131 / 1600;
+      background: url('assets/bienvenida.jpg') top center / cover;
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+      opacity: 0;
+    }
+    .envelope .env-img {
+      position: relative; display: block; width: 100%; height: auto;
+      filter: drop-shadow(0 26px 30px rgba(0, 0, 0, .65));
+    }
+    /* Sello de cera: x 40–58.9 %, y 37.8–63.3 % de la imagen */
+    #seal { left: 40%; top: 37.8%; width: 18.9%; height: 25.5%; border-radius: 50%; }
+    #seal::before {
+      content: ""; position: absolute; inset: -18%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(248, 188, 52, .5), rgba(248, 188, 52, 0) 68%);
+      animation: pulse 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    #seal::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 245, 210, .95), rgba(255, 210, 110, 0) 70%);
+      opacity: 0; transform: scale(.4);
+      pointer-events: none;
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(.85); opacity: .45; } 50% { transform: scale(1.12); opacity: 1; } }
+    .hint {
+      margin: 0; color: #f6efe2; text-align: center;
+      font-size: 15px; letter-spacing: .04em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
+      animation: bob 1.8s ease-in-out infinite;
+    }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    .env-title, .hint { transition: opacity .4s ease; }
+    .opening .env-title, .opening .hint { opacity: 0; }
+    .opening #seal { pointer-events: none; }
+    .opening #seal::before { animation: none; opacity: 0; }
+    .opening #seal::after { animation: burst .7s ease-out forwards; }
+    .opening .env-img { animation: shake .45s ease-in-out, drop .7s cubic-bezier(.5, 0, .7, .4) 1.25s forwards; }
+    .opening .letter { animation: pull 1.1s cubic-bezier(.3, .9, .3, 1) .45s forwards; }
+    @keyframes burst { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(3.2); } }
+    @keyframes shake {
+      0%, 100% { transform: rotate(0); } 20% { transform: rotate(-1.6deg); } 40% { transform: rotate(1.4deg); }
+      60% { transform: rotate(-1deg); } 80% { transform: rotate(.6deg); }
+    }
+    @keyframes drop { to { transform: translateY(40%) scale(.92); opacity: 0; } }
+    @keyframes pull {
+      0% { opacity: 0; transform: translateY(0); }
+      12% { opacity: 1; }
+      100% { opacity: 1; transform: translateY(-46%) scale(1.04); }
+    }
+
+    /* ---------- Vista 2: bienvenida ---------- */
+    #btnVote { left: 34.2%; top: 71.4%; width: 33.8%; height: 13.6%; animation: glow 2.2s ease-in-out infinite; }
+
+    /* ---------- Vista 3: votación (coordenadas medidas sobre la imagen) ---------- */
+    .baby {
+      position: absolute; border: 0; padding: 0; cursor: pointer;
+      background: transparent; border-radius: 50%;
+      transition: box-shadow .35s ease, background .35s ease, opacity .35s ease, transform .35s ease;
+    }
+    .baby:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+    #babyBoy { left: 30.8%; top: 45%; width: 20%; height: 19%; }
+    #babyGirl { left: 52.4%; top: 45%; width: 20%; height: 19%; }
+    .baby::after {
+      /* atenúa al bebé no elegido */
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(251, 243, 234, .55); opacity: 0; transition: opacity .35s ease;
+    }
+    .has-choice .baby:not(.selected)::after { opacity: 1; }
+    .baby.selected { transform: scale(1.04); }
+    #babyBoy.selected { background: rgba(45, 126, 204, .12); animation: aura-boy 1.6s ease-in-out infinite; }
+    #babyGirl.selected { background: rgba(217, 68, 110, .12); animation: aura-girl 1.6s ease-in-out infinite; }
+    @keyframes aura-boy {
+      0%, 100% { box-shadow: 0 0 4cqw 1.4cqw rgba(45, 126, 204, .5), inset 0 0 3cqw rgba(45, 126, 204, .3); }
+      50% { box-shadow: 0 0 7cqw 2.6cqw rgba(45, 126, 204, .78), inset 0 0 4cqw rgba(45, 126, 204, .45); }
+    }
+    @keyframes aura-girl {
+      0%, 100% { box-shadow: 0 0 4cqw 1.4cqw rgba(217, 68, 110, .5), inset 0 0 3cqw rgba(217, 68, 110, .3); }
+      50% { box-shadow: 0 0 7cqw 2.6cqw rgba(217, 68, 110, .78), inset 0 0 4cqw rgba(217, 68, 110, .45); }
+    }
+
+    /* Campos: el borde inferior queda justo sobre cada línea dibujada (x 45.1–72 %) */
+    .line-field {
+      position: absolute; left: 45.1%; width: 26.9%; height: 3.4%;
+      overflow: hidden;
+    }
+    #fName   { top: calc(68.05% - 3.4%); }
+    #fIdea   { top: calc(71.9% - 3.4%); }
+    #fReason { top: calc(76.1% - 3.4%); }
+    .line-field input {
+      /* 16 px reales (evita el zoom automático de iPhone) mostrados a ~10 px */
+      position: absolute; left: 0; bottom: 1px;
+      width: 154%; height: 154%;
+      transform: scale(.65); transform-origin: left bottom;
+      font: 800 16px 'Shippori Mincho', Georgia, serif;
+      color: #8c2828;
+      background: transparent; border: 0; border-radius: 0; outline: none;
+      padding: 0 4px; text-align: center;
+      -webkit-user-select: text; user-select: text;
+    }
+    .line-field input::placeholder { color: rgba(157, 36, 73, .38); font-weight: 600; font-style: italic; }
+    .line-field:focus-within { background: linear-gradient(to top, rgba(248, 188, 52, .22), transparent); }
+    .line-field.invalid { background: linear-gradient(to top, rgba(221, 34, 51, .18), transparent); animation: nudge .35s ease; }
+    @keyframes nudge { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+    #submitBtn { left: 38.4%; top: 79.1%; width: 28.3%; height: 11%; animation: glow 2.2s ease-in-out infinite; }
+    #submitBtn:disabled { cursor: progress; animation: none; background: rgba(251, 243, 234, .55); }
+
+    /* ---------- Vista 4: resultado ---------- */
+    .board { position: absolute; top: 23.4%; left: 42cqw; width: 42cqw; }
+    .board-pct {
+      display: flex; justify-content: space-between;
+      font-family: 'Cinzel', serif; font-weight: 700; font-size: 3.3cqw; margin-bottom: 1cqw;
+    }
+    .board-pct .b { color: var(--boy-dark); }
+    .board-pct .g { color: var(--girl-dark); }
+    .bar {
+      position: relative; display: flex; height: 3cqw; border-radius: 99px; overflow: hidden;
+      background: rgba(94, 75, 55, .12);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, .2);
+    }
+    .bar > div { height: 100%; width: 50%; transition: width 1.6s cubic-bezier(.25, 1, .5, 1); }
+    #barBoy { background: linear-gradient(90deg, var(--boy-dark), #4691d0); }
+    #barGirl { background: linear-gradient(90deg, #e06d8b, var(--girl-dark)); }
+    .bar::after {
+      content: ""; position: absolute; top: -20%; bottom: -20%; width: 1.6cqw;
+      left: calc(var(--split, 50%) - .8cqw);
+      background: radial-gradient(ellipse, #fff 0%, rgba(255, 236, 170, .9) 40%, transparent 72%);
+      transition: left 1.6s cubic-bezier(.25, 1, .5, 1);
+    }
+    .board-meta {
+      position: absolute; top: 34.5%; left: 49cqw; width: 33cqw;
+      text-align: center; font-size: 2.9cqw; line-height: 1.4; font-weight: 600;
+    }
+    .chip {
+      display: inline-block; padding: .5cqw 2.4cqw; border-radius: 99px;
+      font-family: 'Cinzel', serif; font-weight: 700; font-size: 2.6cqw; color: #fff;
+      margin-bottom: .8cqw;
+    }
+    .chip.boy { background: linear-gradient(90deg, var(--boy-dark), #4691d0); }
+    .chip.girl { background: linear-gradient(90deg, #e06d8b, var(--girl-dark)); }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(246, 239, 226, .94); color: var(--crimson-dark);
+      border: 1.5px solid #b8a287; border-radius: 99px;
+      padding: 9px 18px; font-family: 'Cinzel', serif; font-weight: 700; font-size: 13px;
+      letter-spacing: .04em; cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .35);
+      transition: transform .15s ease;
+    }
+    .pill:active { transform: scale(.96); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; z-index: 50;
+      max-width: calc(100vw - 32px); text-align: center;
+      transform: translate(-50%, 40px); opacity: 0;
+      background: rgba(20, 16, 12, .92); color: #f6efe2;
+      padding: 10px 18px; border-radius: 99px; font-size: 15px;
+      transition: transform .35s ease, opacity .35s ease;
+      pointer-events: none;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    /* ---------- Confeti ---------- */
+    .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
+    .confetti i {
+      position: absolute; top: -14px; width: 8px; height: 13px; border-radius: 2px;
+      animation: fall var(--d) cubic-bezier(.3, .4, .6, 1) var(--delay) forwards;
+    }
+    @keyframes fall { to { transform: translate(var(--x), 110vh) rotate(var(--r)); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      #ki, .confetti { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="ki" aria-hidden="true"></div>
+
+  <main class="stage">
+
+    <!-- ================= VISTA 1: EL SOBRE ================= -->
+    <section id="viewEnvelope" class="view active" aria-label="Sobre de invitación">
+      <h1 class="env-title"><small>Tienes una invitación</small>Nueva Aventura Saiyajin</h1>
+      <div class="envelope">
+        <div class="letter" aria-hidden="true"></div>
+        <img class="env-img" src="assets/sobre.webp" width="1200" height="876" alt="Sobre sellado con una esfera del dragón">
+        <button class="hotspot" id="seal" aria-label="Abrir la invitación"></button>
+      </div>
+      <p class="hint">Toca el sello sagrado para abrir</p>
+    </section>
+
+    <!-- ================= VISTA 2: BIENVENIDA ================= -->
+    <section id="viewWelcome" class="view" aria-label="Invitación" aria-hidden="true">
+      <div class="card">
+        <img class="art" src="assets/bienvenida.jpg" alt="Nueva Aventura Saiyajin. ¿Guerrero o guerrera? Familia Leiton Rojas">
+        <button class="hotspot" id="btnVote" aria-label="Vota aquí"></button>
+      </div>
+    </section>
+
+    <!-- ================= VISTA 3: VOTACIÓN ================= -->
+    <section id="viewVoting" class="view" aria-label="Votación" aria-hidden="true">
+      <div class="card">
+        <img class="art" src="assets/votacion.jpg" alt="Presiona el bebé según el género que escojas">
+        <form id="voteForm" novalidate>
+          <div id="teams" role="radiogroup" aria-label="Escoge tu equipo">
+            <button type="button" class="baby" id="babyBoy" data-team="Niño" role="radio" aria-checked="false" aria-label="Guerrero (niño, Goten)"></button>
+            <button type="button" class="baby" id="babyGirl" data-team="Niña" role="radio" aria-checked="false" aria-label="Guerrera (niña, Pan)"></button>
+          </div>
+
+          <div class="line-field" id="fName">
+            <input type="text" id="guestName" autocomplete="name" maxlength="60" placeholder="toca para escribir" aria-label="Tu nombre">
+          </div>
+          <div class="line-field" id="fIdea">
+            <input type="text" id="nameIdea" autocomplete="off" maxlength="60" placeholder="(opcional)" aria-label="Idea de nombre para bebé">
+          </div>
+          <div class="line-field" id="fReason">
+            <input type="text" id="voteReason" autocomplete="off" maxlength="140" aria-label="¿Por qué crees que será niña o niño?">
+          </div>
+
+          <button type="submit" class="hotspot" id="submitBtn" aria-label="Enviar mi voto"></button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= VISTA 4: RESULTADO ================= -->
+    <section id="viewResult" class="view" aria-label="Marcador" aria-hidden="true">
+      <div class="card">
+        <img class="art" src="assets/resultado.jpg" alt="Marcador de los dioses. Acompáñanos a descubrir el marcador final: 12 de octubre, Calle 25 #6b-46, 7:30 pm. Obsequio según tu team: pañales, o pañitos y cosas de aseo.">
+        <div class="board" aria-live="polite">
+          <div class="board-pct">
+            <span class="b" id="boyPercent">50%</span>
+            <span class="g" id="girlPercent">50%</span>
+          </div>
+          <div class="bar" id="bar">
+            <div id="barBoy"></div>
+            <div id="barGirl"></div>
+          </div>
+        </div>
+        <div class="board-meta">
+          <span class="chip" id="myChip" hidden></span><br>
+          <span id="totalVotes"></span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="pill" id="btnShare">Compartir invitación</button>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    // Google Apps Script: doPost guarda cada voto en la hoja, doGet devuelve { nino, nina }
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdZpc63niV1vvu4VJZowdbxsXbCcUCH-ApX2aCjNtN2KFqn1zBAmP-6XzXqwEvZbcK/exec";
+    const VOTE_KEY = "lr_revelacion_voto";
+
+    const $ = (id) => document.getElementById(id);
+    const views = ["viewEnvelope", "viewWelcome", "viewVoting", "viewResult"];
+    let selectedTeam = "";
+
+    const store = {
+      get() { try { return JSON.parse(localStorage.getItem(VOTE_KEY)); } catch (e) { return null; } },
+      set(v) { try { localStorage.setItem(VOTE_KEY, JSON.stringify(v)); } catch (e) {} },
+      clear() { try { localStorage.removeItem(VOTE_KEY); } catch (e) {} }
+    };
+
+    // ?reiniciar en la URL borra el voto guardado en este dispositivo (útil para probar)
+    if (new URLSearchParams(location.search).has("reiniciar")) store.clear();
+
+    function show(id) {
+      views.forEach((v) => {
+        const on = v === id;
+        $(v).classList.toggle("active", on);
+        $(v).setAttribute("aria-hidden", on ? "false" : "true");
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function toast(msg) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => t.classList.remove("show"), 2800);
+    }
+
+    function withTimeout(promise, ms) {
+      return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+    }
+
+    // ---------- Partículas de ki ----------
+    (function spawnKi() {
+      const box = $("ki");
+      const n = window.innerWidth < 600 ? 18 : 30;
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement("span");
+        s.style.left = Math.random() * 100 + "%";
+        s.style.setProperty("--s", 3 + Math.random() * 7 + "px");
+        s.style.setProperty("--d", 9 + Math.random() * 10 + "s");
+        s.style.setProperty("--delay", -Math.random() * 18 + "s");
+        s.style.setProperty("--x", (Math.random() - 0.5) * 120 + "px");
+        box.appendChild(s);
+      }
+    })();
+
+    // Precarga las tarjetas mientras el invitado ve el sobre
+    ["bienvenida", "votacion", "resultado"].forEach((n) => { new Image().src = `assets/${n}.jpg`; });
+
+    // ---------- Vista 1 → 2 ----------
+    $("seal").addEventListener("click", () => {
+      const env = $("viewEnvelope");
+      if (env.classList.contains("opening")) return;
+      env.classList.add("opening");
+      setTimeout(() => show("viewWelcome"), 2050);
+    });
+
+    // ---------- Vista 2 → 3 (o directo al marcador si ya votó) ----------
+    $("btnVote").addEventListener("click", () => {
+      const prev = store.get();
+      if (prev && prev.team) {
+        toast("¡Ya votaste! Así va el marcador");
+        openResult(prev.team, false);
+      } else {
+        show("viewVoting");
+      }
+    });
+
+    // ---------- Selección de equipo ----------
+    document.querySelectorAll(".baby").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedTeam = btn.dataset.team;
+        $("teams").classList.add("has-choice");
+        document.querySelectorAll(".baby").forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle("selected", on);
+          b.setAttribute("aria-checked", on ? "true" : "false");
+        });
+        toast(selectedTeam === "Niño" ? "Team Goten · ¡Guerrero!" : "Team Pan · ¡Guerrera!");
+      });
+    });
+
+    ["guestName", "voteReason"].forEach((id) =>
+      $(id).addEventListener("input", (e) => e.target.parentElement.classList.remove("invalid"))
+    );
+
+    function flag(fieldId, msg) {
+      const f = $(fieldId);
+      f.classList.remove("invalid");
+      void f.offsetWidth; // reinicia la animación
+      f.classList.add("invalid");
+      f.querySelector("input").focus();
+      toast(msg);
+    }
+
+    // ---------- Envío del voto ----------
+    $("voteForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nombre = $("guestName").value.trim();
+      const ideaNombre = $("nameIdea").value.trim();
+      const motivo = $("voteReason").value.trim();
+
+      if (!selectedTeam) { toast("Toca a Goten o a Pan para escoger tu equipo"); return; }
+      if (!nombre) { flag("fName", "Escribe tu nombre"); return; }
+      if (!motivo) { flag("fReason", "Cuéntanos por qué lo crees"); return; }
+
+      const btn = $("submitBtn");
+      btn.disabled = true;
+      toast("Enviando tu voto…");
+
+      const body = new URLSearchParams({ nombre, equipo: selectedTeam, ideaNombre, motivo });
+      try {
+        await withTimeout(fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString()
+        }), 12000);
+      } catch (ex) {
+        console.warn("No se pudo confirmar el envío:", ex);
+      }
+
+      store.set({ team: selectedTeam, nombre, at: Date.now() });
+      openResult(selectedTeam, true);
+    });
+
+    // ---------- Marcador ----------
+    async function fetchStats() {
+      const res = await withTimeout(fetch(GOOGLE_SCRIPT_URL + "?action=stats&t=" + Date.now()), 10000);
+      const data = await res.json();
+      const nino = Number(data.nino), nina = Number(data.nina);
+      if (!Number.isFinite(nino) || !Number.isFinite(nina)) throw new Error("respuesta inválida");
+      return { nino, nina };
+    }
+
+    function renderBoard(nino, nina) {
+      const total = nino + nina;
+      const pctBoy = total ? Math.round((nino / total) * 100) : 50;
+      const pctGirl = total ? 100 - pctBoy : 50;
+      $("boyPercent").textContent = `${pctBoy}%`;
+      $("girlPercent").textContent = `${pctGirl}%`;
+      $("barBoy").style.width = `${pctBoy}%`;
+      $("barGirl").style.width = `${pctGirl}%`;
+      $("bar").style.setProperty("--split", `${pctBoy}%`);
+      $("totalVotes").textContent = total === 1 ? "1 voto en total" : `${total} votos en total`;
+    }
+
+    async function openResult(team, celebrate) {
+      const chip = $("myChip");
+      chip.hidden = false;
+      chip.className = "chip " + (team === "Niño" ? "boy" : "girl");
+      chip.textContent = "Tu voto: " + (team === "Niño" ? "Guerrero" : "Guerrera");
+
+      renderBoard(0, 0); // arranca 50/50 y luego anima hacia el conteo real
+      $("totalVotes").textContent = "Consultando a los dioses…";
+      show("viewResult");
+      if (celebrate) setTimeout(confetti, 450);
+
+      try {
+        const { nino, nina } = await fetchStats();
+        setTimeout(() => renderBoard(nino, nina), 500);
+      } catch (ex) {
+        console.warn("Marcador no disponible:", ex);
+        $("boyPercent").textContent = "?";
+        $("girlPercent").textContent = "?";
+        $("totalVotes").textContent = "El marcador se revelará muy pronto";
+      }
+    }
+
+    function confetti() {
+      const box = document.createElement("div");
+      box.className = "confetti";
+      const colors = ["#2d7ecc", "#4691d0", "#d9446e", "#e06d8b", "#f8bc34", "#ffffff"];
+      for (let i = 0; i < 90; i++) {
+        const c = document.createElement("i");
+        c.style.left = Math.random() * 100 + "%";
+        c.style.background = colors[i % colors.length];
+        c.style.setProperty("--d", 2.4 + Math.random() * 2 + "s");
+        c.style.setProperty("--delay", Math.random() * 0.6 + "s");
+        c.style.setProperty("--x", (Math.random() - 0.5) * 240 + "px");
+        c.style.setProperty("--r", (Math.random() - 0.5) * 1440 + "deg");
+        box.appendChild(c);
+      }
+      document.body.appendChild(box);
+      setTimeout(() => box.remove(), 5200);
+    }
+
+    // ---------- Compartir ----------
+    $("btnShare").addEventListener("click", async () => {
+      const url = location.origin + location.pathname;
+      const text = "¡Nueva Aventura Saiyajin! ¿Guerrero o guerrera? Abre la invitación de la Familia Leiton Rojas y vota:";
+      if (navigator.share) {
+        try { await navigator.share({ title: document.title, text, url }); } catch (e) {}
+        return;
+      }
+      window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank", "noopener");
+    });
+  </script>
+</body>
+</html>
